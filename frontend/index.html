@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APMAN-Net v2.0 | Underwater Image Enhancement</title>
+    <!-- Modern Clean Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome 6 Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css?v=exact_ui_v3">
+</head>
+<body>
+
+    <!-- Top Navigation Header -->
+    <header class="app-header">
+        <div class="header-container">
+            <div class="brand">
+                <div class="brand-title">
+                    <h1>APMAN-Net <span class="badge-v2">v2.0</span></h1>
+                </div>
+                <p class="brand-sub">Adaptive Physics-Guided Multi-Stage Attention Network for Underwater Image Enhancement</p>
+            </div>
+            <div class="header-right">
+                <button type="button" class="pill-btn" id="btn-open-arch-modal">
+                    <i class="fa-solid fa-circle-info"></i> Architecture &amp; Physics
+                </button>
+                <div class="pill-badge">
+                    <i class="fa-solid fa-circle-check"></i> VIT-AP University &bull; SCOPE
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main 2-Column Application Layout -->
+    <main class="main-container">
+        <div class="app-layout">
+            
+            <!-- LEFT COLUMN: Upload & Physics-Guided Controls -->
+            <aside class="left-column">
+                
+                <!-- 1. Upload Card -->
+                <div class="card upload-card">
+                    <div class="card-header-row">
+                        <div class="icon-squircle icon-blue">
+                            <i class="fa-solid fa-arrow-up-from-bracket"></i>
+                        </div>
+                        <div>
+                            <h2 class="card-title">Upload Raw Underwater Image</h2>
+                            <p class="card-subtitle">Select or drop degraded, blue/green-casted, or hazy underwater imagery.</p>
+                        </div>
+                    </div>
+
+                    <!-- Dashed Dropzone Box -->
+                    <div class="dropzone" id="dropzone">
+                        <input type="file" id="file-input" accept="image/*" class="file-hidden">
+                        
+                        <div class="dropzone-content" id="dropzone-prompt">
+                            <div class="drop-icon-box">
+                                <i class="fa-regular fa-image"></i>
+                            </div>
+                            <p class="drop-main-text">Drag &amp; drop raw underwater image here</p>
+                            <p class="drop-sub-text">or <span class="browse-link">browse files</span> from your device</p>
+                            <span class="drop-footer-text">Supports PNG, JPG, JPEG, WEBP, BMP &bull; Auto-calibrated channel prior</span>
+                        </div>
+
+                        <!-- Chosen Image Preview Box -->
+                        <div class="chosen-preview" id="chosen-preview" style="display: none;">
+                            <img id="chosen-thumb" src="" alt="Selected Raw Image">
+                            <div class="chosen-details">
+                                <span class="chosen-filename" id="chosen-filename">underwater_image.png</span>
+                                <span class="chosen-filesize" id="chosen-filesize">0 KB</span>
+                                <button type="button" class="btn-change" id="btn-change-file">
+                                    <i class="fa-solid fa-arrow-rotate-left"></i> Change Image
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Physics-Guided & Attention Controls (Collapsible Accordion) -->
+                    <div class="accordion-panel" id="controls-accordion">
+                        <div class="accordion-header" id="accordion-toggle">
+                            <div class="accordion-title">
+                                <i class="fa-solid fa-sliders"></i>
+                                <span>Physics-Guided &amp; Attention Controls</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-up accordion-chevron" id="accordion-chevron"></i>
+                        </div>
+
+                        <div class="accordion-body" id="accordion-body">
+                            <!-- Control 1: Super-Resolution Target -->
+                            <div class="control-row">
+                                <span class="control-label">Super-Resolution Target</span>
+                                <div class="segmented-control" id="sr-segmented">
+                                    <button type="button" class="seg-btn" data-target="1080p">1080p</button>
+                                    <button type="button" class="seg-btn" data-target="2k">2K QHD</button>
+                                    <button type="button" class="seg-btn active" data-target="4k">4K HD</button>
+                                </div>
+                            </div>
+
+                            <!-- Control 2: Red-Channel Attenuation Gain -->
+                            <div class="control-slider-group">
+                                <div class="slider-label-row">
+                                    <span class="control-label">Red-Channel Attenuation Gain</span>
+                                    <span class="slider-value" id="val-red-gain">100%</span>
+                                </div>
+                                <input type="range" class="custom-range" id="slider-red-gain" min="0" max="200" value="100">
+                            </div>
+
+                            <!-- Control 3: Medium Transmission Dehazing -->
+                            <div class="control-slider-group">
+                                <div class="slider-label-row">
+                                    <span class="control-label">Medium Transmission Dehazing</span>
+                                    <span class="slider-value" id="val-dehaze">85%</span>
+                                </div>
+                                <input type="range" class="custom-range" id="slider-dehaze" min="0" max="100" value="85">
+                            </div>
+
+                            <!-- Control 4: Jaffe-McGlamery Backscatter Suppression -->
+                            <div class="control-row control-toggle-row">
+                                <span class="control-label">Jaffe-McGlamery Backscatter Suppression</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="toggle-backscatter" checked>
+                                    <span class="slider-toggle round"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Primary Enhance Button -->
+                    <button type="button" class="btn-enhance-main" id="btn-enhance" disabled>
+                        <i class="fa-solid fa-bolt"></i> Enhance Image with APMAN-Net (4K HD)
+                    </button>
+                </div>
+            </aside>
+
+            <!-- RIGHT COLUMN: Restoration & Spectral Inspection -->
+            <section class="right-column">
+                <div class="card inspection-card">
+                    
+                    <!-- Inspection Card Header with View Switch Tabs -->
+                    <div class="inspection-header">
+                        <div class="inspection-title-group">
+                            <i class="fa-solid fa-layer-group icon-blue-sm"></i>
+                            <h2 class="card-title">Restoration &amp; Spectral Inspection</h2>
+                        </div>
+                        <div class="view-tabs" id="view-tabs">
+                            <button type="button" class="tab-btn active" data-view="split">
+                                <i class="fa-solid fa-table-columns"></i> Split Slider
+                            </button>
+                            <button type="button" class="tab-btn" data-view="side">
+                                <i class="fa-solid fa-grip-vertical"></i> Side-by-Side
+                            </button>
+                            <button type="button" class="tab-btn" data-view="transmission">
+                                <i class="fa-solid fa-chart-line"></i> Transmission Map
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Viewport Area -->
+                    <div class="viewport-box" id="viewport-box">
+                        
+                        <!-- 1. Initial State (Before Image Enhanced) -->
+                        <div class="viewport-initial" id="viewport-initial">
+                            <div class="viewport-eye-icon">
+                                <i class="fa-regular fa-eye"></i>
+                            </div>
+                            <h3 class="viewport-heading">Interactive Restoration &amp; Telemetry Viewport</h3>
+                            <p class="viewport-subheading">
+                                Upload your raw underwater image to inspect split-screen restoration, medium transmission maps, and UIQM/UCIQE metrics.
+                            </p>
+
+                            <!-- 4 Pipeline Stage Cards -->
+                            <div class="pipeline-stages-grid">
+                                <div class="stage-card">
+                                    <span class="stage-num">STAGE 01</span>
+                                    <h4 class="stage-name">Transmission Map</h4>
+                                    <p class="stage-sub">Dark Channel Prior</p>
+                                </div>
+                                <div class="stage-card">
+                                    <span class="stage-num">STAGE 02</span>
+                                    <h4 class="stage-name">Color Compensation</h4>
+                                    <p class="stage-sub">Red-Channel Gain</p>
+                                </div>
+                                <div class="stage-card">
+                                    <span class="stage-num">STAGE 03</span>
+                                    <h4 class="stage-name">Multi-Attention</h4>
+                                    <p class="stage-sub">Spatial + Channel</p>
+                                </div>
+                                <div class="stage-card">
+                                    <span class="stage-num">STAGE 04</span>
+                                    <h4 class="stage-name">4K Refinement</h4>
+                                    <p class="stage-sub">Edge Super-Res</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Loading State -->
+                        <div class="viewport-loader" id="viewport-loader" style="display: none;">
+                            <div class="spinner-blue"></div>
+                            <h3>Enhancing Underwater Image in 4K HD...</h3>
+                            <p>Executing APMAN-Net v2.0 neural physics &amp; 4K detail fusion</p>
+                        </div>
+
+                        <!-- 3. Active Enhanced Display Modes -->
+                        <div class="viewport-content" id="viewport-content" style="display: none;">
+                            
+                            <!-- MODE A: Split Slider -->
+                            <div class="view-mode-container active" id="mode-split">
+                                <div class="split-comparison" id="split-comparison">
+                                    <img id="split-raw-img" src="" alt="Raw Input" class="split-img raw-img">
+                                    <div class="split-enhanced-wrapper" id="split-enhanced-wrapper">
+                                        <img id="split-enhanced-img" src="" alt="4K Enhanced" class="split-img enhanced-img">
+                                    </div>
+                                    <div class="split-handle" id="split-handle">
+                                        <div class="split-handle-line"></div>
+                                        <div class="split-handle-btn">
+                                            <i class="fa-solid fa-arrows-left-right"></i>
+                                        </div>
+                                    </div>
+                                    <span class="img-badge badge-left">RAW INPUT</span>
+                                    <span class="img-badge badge-right">APMAN-Net 4K ENHANCED</span>
+                                </div>
+                            </div>
+
+                            <!-- MODE B: Side-by-Side -->
+                            <div class="view-mode-container" id="mode-side">
+                                <div class="side-comparison">
+                                    <div class="side-pane">
+                                        <div class="pane-tag">BEFORE (RAW INPUT)</div>
+                                        <img id="side-raw-img" src="" alt="Before - Raw">
+                                    </div>
+                                    <div class="side-pane highlight-pane">
+                                        <div class="pane-tag highlight">AFTER (APMAN-Net 4K ENHANCED)</div>
+                                        <img id="side-enhanced-img" src="" alt="After - Enhanced">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- MODE C: Transmission Map -->
+                            <div class="view-mode-container" id="mode-transmission">
+                                <div class="transmission-comparison">
+                                    <div class="trans-pane">
+                                        <div class="pane-tag">TURBO TRANSMISSION MAP &bull; t(x)</div>
+                                        <img id="trans-img" src="" alt="Medium Transmission Map">
+                                        <div class="trans-legend">
+                                            <span>Deep Attenuated (Blue)</span>
+                                            <div class="legend-bar"></div>
+                                            <span>High Clearance (Red/Yellow)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Bottom Telemetry & Metrics Row (5 Boxes) -->
+                    <div class="telemetry-grid">
+                        <div class="metric-card">
+                            <span class="metric-label">UIQM SCORE</span>
+                            <span class="metric-value" id="m-uiqm">--</span>
+                            <div class="metric-accent-line blue"></div>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-label">UCIQE INDEX</span>
+                            <span class="metric-value" id="m-uciqe">--</span>
+                            <div class="metric-accent-line dark"></div>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-label">EST. PSNR</span>
+                            <span class="metric-value" id="m-psnr">--</span>
+                            <div class="metric-accent-line dark"></div>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-label">SSIM FIDELITY</span>
+                            <span class="metric-value" id="m-ssim">--</span>
+                            <div class="metric-accent-line dark"></div>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-label">LATENCY</span>
+                            <span class="metric-value" id="m-latency">--</span>
+                            <div class="metric-accent-line green"></div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Actions Row -->
+                    <div class="telemetry-bottom-row">
+                        <p class="telemetry-subtext">Quantitative IQA telemetry updates automatically post-inference.</p>
+                        <div class="telemetry-actions">
+                            <button type="button" class="btn-outline-action" id="btn-copy-metrics">
+                                <i class="fa-regular fa-copy"></i> Copy Metrics
+                            </button>
+                            <button type="button" class="btn-solid-download" id="btn-download-hd">
+                                <i class="fa-solid fa-download"></i> Download 4K HD PNG
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Architecture & Physics Modal -->
+    <div class="modal-backdrop" id="arch-modal" style="display: none;">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title-wrap">
+                    <i class="fa-solid fa-brain icon-blue"></i>
+                    <div>
+                        <h3>APMAN-Net v2.0 Architecture &amp; Physics</h3>
+                        <p>Adaptive Physics-Guided Multi-Stage Attention Network</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-modal-close" id="btn-close-arch-modal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-content">
+                <div class="arch-stat-grid">
+                    <div class="arch-stat-box">
+                        <span class="arch-stat-num">0.52M</span>
+                        <span class="arch-stat-label">Model Parameters</span>
+                    </div>
+                    <div class="arch-stat-box">
+                        <span class="arch-stat-num">8 Stages</span>
+                        <span class="arch-stat-label">Multi-Stage Pipeline</span>
+                    </div>
+                    <div class="arch-stat-box">
+                        <span class="arch-stat-num">42+ FPS</span>
+                        <span class="arch-stat-label">Real-Time Inference</span>
+                    </div>
+                    <div class="arch-stat-box">
+                        <span class="arch-stat-num">4K UHD</span>
+                        <span class="arch-stat-label">Output Super-Res</span>
+                    </div>
+                </div>
+
+                <div class="modal-section">
+                    <h4><i class="fa-solid fa-water"></i> Optical Model (Jaffe-McGlamery Formulation)</h4>
+                    <p>Underwater degradation is physically modeled as:
+                        <code>I_&lambda;(x) = J_&lambda;(x) &bull; t_&lambda;(x) + A_&lambda; &bull; (1 - t_&lambda;(x))</code>.
+                        APMAN-Net adaptively estimates channel-dependent medium transmission <code>t(x)</code> and backscatter light <code>A</code> to invert degradation directly.
+                    </p>
+                </div>
+
+                <div class="modal-section">
+                    <h4><i class="fa-solid fa-atom"></i> Dual Attention &amp; Edge Gating</h4>
+                    <p>Features pass through CBAM (Channel &amp; Spatial Attention) combined with Efficient Channel Attention (ECA) and a Dual Sobel-Laplacian Edge-Gated module to eliminate halos while preserving fine coral and marine textures.</p>
+                </div>
+
+                <div class="modal-section">
+                    <h4><i class="fa-solid fa-expand"></i> 4K Ultra HD Detail Fusion</h4>
+                    <p>Restored RGB outputs are transformed to CIE LAB space, fusing neural chromaticity predictions with high-frequency unsharp edge details to output crisp 3840 &times; 2160 images without artifacting.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast" style="display: none;"></div>
+
+    <script src="app.js?v=exact_ui_v3"></script>
+</body>
+</html>
